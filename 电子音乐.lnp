@@ -1,0 +1,4 @@
+"STARTUP.obj",
+"电子音乐.obj" 
+TO "电子音乐" 
+RAMSIZE(256) 

@@ -1,0 +1,114 @@
+C51 COMPILER V9.01   电子音繽                                                              02/28/2017 14:13:45 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE 电子音繽
+OBJECT MODULE PLACED IN 电子音乐.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE 电子音乐.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include<reg51.h>
+   2          sbit sp = P1^5;   //输出音乐口
+   3          unsigned char hi_note=0;   //定时器初值高八位
+   4          unsigned char low_note=0;  //定时器初值低八位
+   5          unsigned char i; //乐谱音符循环变量
+   6          code unsigned song[] = {
+   7          0x42,0x01,0x41,0x54,0x44,0x74,
+   8          0x64,0x42,0x01,0x41,0x54,0x44,
+   9          0x84,0x74,0x74,0x42,0x01,0x41,
+  10          0xB4,0x84,0x74,0x64,0xC4,0xA2,
+  11          0x01,0xA1,0x94,0x74,0x84,0x74,
+  12          0x74,
+  13          0x42,0x01,0x41,0x54,0x44,0x74,
+  14          0x64,0x42,0x01,0x41,0x54,0x44,
+  15          0x84,0x74,0x74,0x42,0x01,0x41,
+  16          0xB4,0x84,0x74,0x64,0xC4,0xA2,
+  17          0x01,0xA1,0x94,0x74,0x84,0x74,
+  18          0x74,0x00
+  19          };         //乐谱代码
+  20          code int note[]={0x0000,0xFB03,0xFB83,
+  21          0xFC0B,0xFC43,0xFCAB,0xFD08,0xFD32,0xFD81,
+  22          0xFDC7,0xFE05,0xFE21,0xFE55,0xFE83,0xFE99,
+  23          0xFEC0} ; //固定频率对应的定时器初值数组
+  24          /**********************节拍延时*************************/
+  25          void delay(unsigned int n)
+  26          {
+  27   1       unsigned int i,j;
+  28   1       for(i=0;i<1000*n;i++)
+  29   1       for(j=0;j<120;j++);
+  30   1      
+  31   1      }
+  32          /************************固定频率方波控制****************************/
+  33          static void time1_isr(void)interrupt 3
+  34          {
+  35   1      TR1=0;
+  36   1      TL1=low_note;
+  37   1      TH1=hi_note;
+  38   1      sp=~sp;
+  39   1      TR1=1;
+  40   1      }
+  41          /*************************定时器初始化****************************************/
+  42          static void time1_initialize(void)
+  43          {
+  44   1      EA=0;
+  45   1      TR1=0;
+  46   1      TMOD=0x10;      //设置定时器1为工作方式1
+  47   1      ET1=1;  //打开定时器1中断
+  48   1      EA=1;   // 打开总中断
+  49   1      }
+  50          /******************************************************************/
+  51          void singing()
+  52          {
+  53   1      unsigned char beat,temp;  //定义节拍和音调变量
+  54   1      i=0;
+  55   1      do
+C51 COMPILER V9.01   电子音繽                                                              02/28/2017 14:13:45 PAGE 2   
+
+  56   1      {
+  57   2      temp=song[i];//取音符
+  58   2      if(temp==0)
+  59   2      {
+  60   3      TR1=0; //音符为0时，不执行定时器中断，直接返回
+  61   3      return;
+  62   3      }
+  63   2      beat=temp&0x0f; //取出低四位节拍数
+  64   2      temp=(temp>>4)&0x0f; //取出高四位音调固定频率
+  65   2      if(temp==0)
+  66   2      TR1=1;     //频率为0时，直接开启定时，定时默认时间为0；
+  67   2      else
+  68   2      {
+  69   3      hi_note=note[temp]>>8;  //取固定频率的高八位
+  70   3      low_note=note[temp]&0x00ff;     //取固定频率的低八位
+  71   3      TR1=1;   //      设定好固定频率的定时初值后，开启定时器
+  72   3      }
+  73   2      delay(beat);  //固定频率中断的持续时间，即节拍时间 
+  74   2      i++;   //取下一音符
+  75   2      }
+  76   1      while(1);
+  77   1      
+  78   1      }
+  79          /**********************************************************************/
+  80          void main(void)
+  81          {
+  82   1      time1_initialize();      //定时器初始化
+  83   1      do
+  84   1      {
+  85   2      singing();
+  86   2      }
+  87   1      while(1);
+  88   1      
+  89   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    157    ----
+   CONSTANT SIZE    =    158    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
